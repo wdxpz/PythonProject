@@ -7,8 +7,8 @@ import scipy.io as sio
 import numpy as np
 import pandas as pd
 
-from Data_Precessor.get_density_map import get_density_map
-from Src.utils import show_density_map
+from get_density_map import get_density_map
+#from Src.utils import show_density_map
 
 seed = 95461354
 random.seed(seed)

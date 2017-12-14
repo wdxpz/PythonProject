@@ -18,7 +18,7 @@ if not os.path.exists(gt_path_csv):
     os.makedirs(gt_path_csv)
 
 num_images = 182 if dataset == 'A' else 316
-num_images=3
+
 for i in range(1, num_images):
     if i % 10 ==0:
         print('processing {}/{}files...'.format(i, num_images))

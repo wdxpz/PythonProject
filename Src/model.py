@@ -11,24 +11,24 @@ def model_input():
     return inputs, gt, learning_rate, is_training
 
 
-def model_MCNN(inputs, bn, is_train):
+def model_MCNN(inputs, bn, dropout, is_train):
     # branch1
-    branch1 = conv2d(inputs, 16, 9, 1, bn=bn, is_train=is_train, relu=True, dropout=False, max_pool=True)
-    branch1 = conv2d(branch1, 32, 7, 1, bn=bn, is_train=is_train, relu=True, dropout=False, max_pool=True)
-    branch1 = conv2d(branch1, 16, 7, 1, bn=bn, is_train=is_train, relu=True, dropout=False, max_pool=False)
-    branch1 = conv2d(branch1, 8, 7, 1, bn=bn, is_train=is_train, relu=True, dropout=False, max_pool=False)
+    branch1 = conv2d(inputs, 16, 9, 1, bn=bn, is_train=is_train, relu=True, dropout=dropout, max_pool=True)
+    branch1 = conv2d(branch1, 32, 7, 1, bn=bn, is_train=is_train, relu=True, dropout=dropout, max_pool=True)
+    branch1 = conv2d(branch1, 16, 7, 1, bn=bn, is_train=is_train, relu=True, dropout=dropout, max_pool=False)
+    branch1 = conv2d(branch1, 8, 7, 1, bn=bn, is_train=is_train, relu=True, dropout=dropout, max_pool=False)
 
     # branch2
-    branch2 = conv2d(inputs, 20, 7, 1, bn=bn, is_train=is_train, relu=True, dropout=False, max_pool=True)
-    branch2 = conv2d(branch2, 40, 5, 1, bn=bn, is_train=is_train, relu=True, dropout=False, max_pool=True)
-    branch2 = conv2d(branch2, 20, 3, 1, bn=bn, is_train=is_train, relu=True, dropout=False, max_pool=False)
-    branch2 = conv2d(branch2, 10, 3, 1, bn=bn, is_train=is_train, relu=True, dropout=False, max_pool=False)
+    branch2 = conv2d(inputs, 20, 7, 1, bn=bn, is_train=is_train, relu=True, dropout=dropout, max_pool=True)
+    branch2 = conv2d(branch2, 40, 5, 1, bn=bn, is_train=is_train, relu=True, dropout=dropout, max_pool=True)
+    branch2 = conv2d(branch2, 20, 3, 1, bn=bn, is_train=is_train, relu=True, dropout=dropout, max_pool=False)
+    branch2 = conv2d(branch2, 10, 3, 1, bn=bn, is_train=is_train, relu=True, dropout=dropout, max_pool=False)
 
     # branch3
-    branch3 = conv2d(inputs, 24, 5, 1, bn=bn, is_train=is_train, relu=True, dropout=False, max_pool=True)
-    branch3 = conv2d(branch3, 48, 3, 1, bn=bn, is_train=is_train, relu=True, dropout=False, max_pool=True)
-    branch3 = conv2d(branch3, 24, 3, 1, bn=bn, is_train=is_train, relu=True, dropout=False, max_pool=False)
-    branch3 = conv2d(branch3, 12, 3, 1, bn=bn, is_train=is_train, relu=True, dropout=False, max_pool=False)
+    branch3 = conv2d(inputs, 24, 5, 1, bn=bn, is_train=is_train, relu=True, dropout=dropout, max_pool=True)
+    branch3 = conv2d(branch3, 48, 3, 1, bn=bn, is_train=is_train, relu=True, dropout=dropout, max_pool=True)
+    branch3 = conv2d(branch3, 24, 3, 1, bn=bn, is_train=is_train, relu=True, dropout=dropout, max_pool=False)
+    branch3 = conv2d(branch3, 12, 3, 1, bn=bn, is_train=is_train, relu=True, dropout=dropout, max_pool=False)
 
     fuse = tf.concat([branch1, branch2, branch3], 3)
 

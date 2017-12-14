@@ -2,7 +2,7 @@ import numpy as np
 import scipy
 from scipy.ndimage import filters
 
-from Src.utils import save_density_map
+#from Src.utils import save_density_map
 
 
 def get_density_map(im, points, model='constant_sigma'):

@@ -50,12 +50,12 @@ def test(sess, dataloader, input_image, gt_density, loss, gt_count, crowd_count,
     return val_loss / steps, mae / steps
 
 
-def train(epoch_count, learning_rate, beta1, bn):
-    print_every = 1
+def train(epoch_count, learning_rate, beta1, dropout, bn):
+    print_every = 10
     valid_every = 1
 
     input_image, gt_density, lr, is_train = model_input()
-    density = model_MCNN(input_image, bn, is_train)
+    density = model_MCNN(input_image, bn, dropout, is_train)
     loss, gt_count, crowd_count, re_count = model_loss(gt_density, density)
     opt = model_opt(loss, learning_rate, beta1, bn)
     # gt_count, crowd_count = model_crowd_count(gt_density, density)
@@ -114,4 +114,5 @@ if __name__ == '__main__':
     learning_rate = 0.001
     beta1 = 0.5
     bn = False
-    train(epoch_count, learning_rate, beta1, bn)
+    dropout = True
+    train(epoch_count, learning_rate, beta1,dropout, bn)

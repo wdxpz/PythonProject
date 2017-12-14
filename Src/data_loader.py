@@ -35,7 +35,7 @@ class ImageDataLoader:
                     pass
                 wd, ht = img.shape
                 wd1, ht1 = (wd // 4) * 4, (ht // 4) * 4
-                img = skimage.transform.resize(img, [wd1, ht1])
+                img = skimage.transform.resize(img, [wd1, ht1], mode='constant')
                 # print(np.max(img))
                 # print(np.min(img))
                 # skimage.io.imshow(img)
@@ -48,7 +48,7 @@ class ImageDataLoader:
                 #!!!!!!!!!!!!!!!!!!!!!!!!!
                 # if self.gt_downsample:
                 #     wd1, ht1 = wd1/4, ht1/4
-                den = skimage.transform.resize(den, [wd1, ht1]) * ((wd * ht) / (wd1 * ht1))
+                den = skimage.transform.resize(den, [wd1, ht1], mode='constant') * ((wd * ht) / (wd1 * ht1))
                 # print(np.sum(den))
                 den = den.reshape(1, den.shape[0], den.shape[1], 1)
                 blob = {'data': img, 'gt_density': den, 'fname': fname}
@@ -81,14 +81,14 @@ class ImageDataLoader:
                 wd, ht = img.shape
 
                 wd1, ht1 = (wd // 4) * 4, (ht // 4) * 4
-                img = skimage.transform.resize(img, [wd1, ht1])
+                img = skimage.transform.resize(img, [wd1, ht1], mode='constant')
                 skimage.io.imshow(img)
                 img = img.reshape(1, img.shape[0], img.shape[1], 1)
                 den = pd.read_csv(self.gt_path + '\\' + os.path.splitext(fname)[0] + '.csv', header=None,
                                   dtype=np.float32).as_matrix()
                 # if self.gt_downsample:
                 #     wd1, ht1 = wd1 / 4, ht1 / 4
-                den = skimage.transform.resize(den, [wd1, ht1]) * ((wd * ht) / (wd1 * ht1))
+                den = skimage.transform.resize(den, [wd1, ht1], mode='constant') * ((wd * ht) / (wd1 * ht1))
                 den = den.reshape(1, den.shape[0], den.shape[1], 1)
                 # print(np.sum(den))
                 blob = {'data': img, 'gt_density': den, 'fname': fname}
