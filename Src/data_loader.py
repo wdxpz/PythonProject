@@ -28,6 +28,11 @@ class ImageDataLoader:
                 # fn = os.path.join(self.data_path, fname)
                 img = skimage.io.imread(self.data_path+'\\'+fname)
                 # img = img.astype(np.float32, copy=False)
+                try:
+                    if img.shape[2] > 0:
+                        img = skimage.color.rgb2gray(img)
+                except IndexError:
+                    pass
                 wd, ht = img.shape
                 wd1, ht1 = (wd // 4) * 4, (ht // 4) * 4
                 img = skimage.transform.resize(img, [wd1, ht1])
