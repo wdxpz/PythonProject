@@ -10,15 +10,15 @@ from Data_Precessor.get_density_map import get_density_map
 
 dataset = 'A';
 dataset_name = 'part_'+dataset
-path = '../data/original/part_' + dataset + '_final/test_data/images/'
-gt_path = '../data/original/part_' +dataset + '_final/test_data/ground_truth/'
-gt_path_csv = '../data/original/part_' + dataset + '_final/test_data/ground_truth_csv/'
+path = '../Data/part_' + dataset + '_final/test_data/images/'
+gt_path = '../Data/part_' + dataset + '_final/test_data/ground_truth/'
+gt_path_csv = '../Data/part_' + dataset + '_final/test_data/ground_truth_csv/'
 
 if not os.path.exists(gt_path_csv):
     os.makedirs(gt_path_csv)
 
 num_images = 182 if dataset == 'A' else 316
-
+num_images=3
 for i in range(1, num_images):
     if i % 10 ==0:
         print('processing {}/{}files...'.format(i, num_images))

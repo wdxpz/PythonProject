@@ -68,7 +68,13 @@ class ImageDataLoader:
                 fname = files[idx]
                 img = skimage.io.imread(self.data_path + '\\' + fname)
                 # img = img.astype(np.float32, copy=False)
+                try:
+                    if img.shape[2] > 0:
+                        img = skimage.color.rgb2gray(img)
+                except IndexError:
+                    pass
                 wd, ht = img.shape
+
                 wd1, ht1 = (wd // 4) * 4, (ht // 4) * 4
                 img = skimage.transform.resize(img, [wd1, ht1])
                 skimage.io.imshow(img)
@@ -79,7 +85,7 @@ class ImageDataLoader:
                 #     wd1, ht1 = wd1 / 4, ht1 / 4
                 den = skimage.transform.resize(den, [wd1, ht1]) * ((wd * ht) / (wd1 * ht1))
                 den = den.reshape(1, den.shape[0], den.shape[1], 1)
-                print(np.sum(den))
+                # print(np.sum(den))
                 blob = {'data': img, 'gt_density': den, 'fname': fname}
 
             yield blob
