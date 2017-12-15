@@ -56,9 +56,12 @@ def train(epoch_count, learning_rate, beta1, dropout, bn):
 
     input_image, gt_density, lr, is_train = model_input()
     density = model_MCNN(input_image, bn, dropout, is_train)
+    density = tf.identity(density, name='density_map')
     loss, gt_count, crowd_count, re_count = model_loss(gt_density, density)
     opt = model_opt(loss, learning_rate, beta1, bn)
     # gt_count, crowd_count = model_crowd_count(gt_density, density)
+
+    saver = tf.train.Saver()
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
@@ -102,6 +105,8 @@ def train(epoch_count, learning_rate, beta1, dropout, bn):
                                  loss, gt_count, crowd_count, is_train)
         log_text = 'epoch: %4d, step %4d, average test loss: %f, average test mae: %4.1f, ' % (avg_test_loss, test_mae)
         print(log_text)
+
+        saver.save(sess, output_dir)
 
 
 if __name__ == '__main__':

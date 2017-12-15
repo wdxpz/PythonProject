@@ -6,7 +6,7 @@ def model_input():
     inputs = tf.placeholder(tf.float32, shape=[1, None, None, 1], name='input_image')
     gt = tf.placeholder(tf.float32, shape=[1, None, None, 1], name='ground_true')
     learning_rate = tf.placeholder(tf.float32, name='learning_rate')
-    is_training = tf.placeholder(tf.bool)
+    is_training = tf.placeholder(tf.bool, 'is_training')
 
     return inputs, gt, learning_rate, is_training
 
