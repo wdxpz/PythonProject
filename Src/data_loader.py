@@ -84,8 +84,11 @@ class ImageDataLoader:
                 img = skimage.transform.resize(img, [wd1, ht1], mode='constant')
                 # skimage.io.imshow(img)
                 img = img.reshape(1, img.shape[0], img.shape[1], 1)
-                den = pd.read_csv(self.gt_path + '\\' + os.path.splitext(fname)[0] + '.csv', header=None,
-                                  dtype=np.float32).as_matrix()
+                try:
+                    den = pd.read_csv(self.gt_path + '\\' + os.path.splitext(fname)[0] + '.csv', header=None,
+                                      dtype=np.float32).as_matrix()
+                except FileNotFoundError:
+                    continue
                 # if self.gt_downsample:
                 #     wd1, ht1 = wd1 / 4, ht1 / 4
                 den = skimage.transform.resize(den, [wd1, ht1], mode='constant') * ((wd * ht) / (wd1 * ht1))
