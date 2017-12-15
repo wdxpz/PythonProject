@@ -82,7 +82,7 @@ class ImageDataLoader:
 
                 wd1, ht1 = (wd // 4) * 4, (ht // 4) * 4
                 img = skimage.transform.resize(img, [wd1, ht1], mode='constant')
-                skimage.io.imshow(img)
+                # skimage.io.imshow(img)
                 img = img.reshape(1, img.shape[0], img.shape[1], 1)
                 den = pd.read_csv(self.gt_path + '\\' + os.path.splitext(fname)[0] + '.csv', header=None,
                                   dtype=np.float32).as_matrix()

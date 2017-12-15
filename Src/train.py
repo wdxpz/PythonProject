@@ -51,8 +51,8 @@ def test(sess, dataloader, input_image, gt_density, loss, gt_count, crowd_count,
 
 
 def train(epoch_count, learning_rate, beta1, dropout, bn):
-    print_every = 10
-    valid_every = 1
+    print_every = 100
+    valid_every = 200
 
     input_image, gt_density, lr, is_train = model_input()
     density = model_MCNN(input_image, bn, dropout, is_train)
@@ -84,23 +84,18 @@ def train(epoch_count, learning_rate, beta1, dropout, bn):
                 mae = fabs(gt_count_val-crowd_count_val)
 
                 if steps % print_every == 0:
-                    # log_text = 'epoch: %4d, step %4d, avaerage training loss: %f, gt_cnt: %4.1f, ' \
-                    #            'resized_gt_cnt: %4.1f, estimate_crowd_cnt: %4.1f' % \
-                    #            (epoch_i, steps, train_loss / steps, gt_count_val, re_count_val, crowd_count_val)
+                    log_text = 'epoch: %4d, step %4d, avaerage training loss: %f, average training mae: %4.1f,  ' % \
+                               (epoch_i, steps, train_loss / steps,  mae / steps)
+                    print(log_text)
 
+                if steps % valid_every == 0:
                     avg_val_loss, val_mae = evaluate(sess, data_loader_val, input_image, gt_density,
-                                                 loss, gt_count, crowd_count, is_train)
+                                                     loss, gt_count, crowd_count, is_train)
 
                     log_text = 'epoch: %4d, step %4d, average training loss: %f, average training mae: %4.1f, ' \
                                'average validation loss: %f, average validation mae: %4.1f' % \
-                                (epoch_i, steps, train_loss / steps, mae / steps, avg_val_loss, val_mae)
+                               (epoch_i, steps, train_loss / steps, mae / steps, avg_val_loss, val_mae)
                     print(log_text)
-                # if steps % valid_every == 0:
-                #     avg_val_loss, mae = evaluate(sess, data_loader_val, input_image, gt_density,
-                #                                  loss, gt_count, crowd_count, is_train)
-                #     log_text = 'epoch: %4d, step %4d, average training loss: %f, average mae: %4.1f' % \
-                #                (epoch_i, steps, avg_val_loss, mae)
-                #     print(log_text)
 
         # final evaluation on test set
         avg_test_loss, test_mae = test(sess, data_loader_test, input_image, gt_density,
@@ -111,8 +106,8 @@ def train(epoch_count, learning_rate, beta1, dropout, bn):
 
 if __name__ == '__main__':
     epoch_count = 10
-    learning_rate = 0.001
+    learning_rate = 0.00005
     beta1 = 0.5
-    bn = False
+    bn = True
     dropout = True
     train(epoch_count, learning_rate, beta1,dropout, bn)

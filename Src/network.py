@@ -9,8 +9,8 @@ def conv2d(inputs, out_channels, kernel_size, stride, bn, is_train, relu=True, d
         conv = tf.layers.batch_normalization(conv, training=is_train)
 
     if relu:
-        # conv = tf.nn.relu(conv)
-        conv = tf.maximum(alpha * conv, conv)
+        conv = tf.nn.relu(conv)
+        # conv = tf.maximum(alpha * conv, conv)
 
     if dropout:
         conv = tf.nn.dropout(conv, keep_prob=keep_prob)
