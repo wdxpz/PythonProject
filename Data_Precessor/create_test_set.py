@@ -8,7 +8,7 @@ import pandas as pd
 
 from Data_Precessor.get_density_map import get_density_map
 
-dataset = 'A';
+dataset = 'B';
 dataset_name = 'part_'+dataset
 path = '../Data/part_' + dataset + '_final/test_data/images/'
 gt_path = '../Data/part_' + dataset + '_final/test_data/ground_truth/'

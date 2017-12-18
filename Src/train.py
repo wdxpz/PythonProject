@@ -38,6 +38,8 @@ def evaluate(sess, dataloader, input_image, gt_density, loss, gt_count, crowd_co
         mae += err
         if err > max_err: max_err = err
         if err < min_err: min_err = err
+        # print('validating file: {}, ground truth count: {}, estimated count: {}'.format(blob['fname'],
+        #                                                                                 gt_count_val, crowd_count_val))
     return val_loss / steps, mae / steps, max_err, min_err
 
 
@@ -59,8 +61,8 @@ def test(sess, dataloader, input_image, gt_density, loss, gt_count, crowd_count,
         mae += err
         if err > max_err: max_err = err
         if err < min_err: min_err = err
-        print('testing file: {}, ground truth count: {}, estimated count: {}'.format(blob['fname'],
-                                                                                     gt_count_val,crowd_count_val))
+        # print('testing file: {}, ground truth count: {}, estimated count: {}'.format(blob['fname'],
+        #                                                                              gt_count_val,crowd_count_val))
     return val_loss / steps, mae / steps, max_err, min_err
 
 
@@ -86,8 +88,8 @@ def predict(sess, filepathname, density, input_image, is_train):
 
 
 def train(epoch_count, learning_rate, beta1, dropout, bn):
-    print_every = 100
-    valid_every = 500
+    print_every = 500
+    valid_every = 1000
 
     input_image, gt_density, lr, is_train = model_input()
     density = model_MCNN(input_image, bn, dropout, is_train)
@@ -152,9 +154,9 @@ def train(epoch_count, learning_rate, beta1, dropout, bn):
 
 
 if __name__ == '__main__':
-    epoch_count = 15
-    learning_rate = 0.00001
+    epoch_count = 100
+    learning_rate = 0.0001
     beta1 = 0.5
-    bn = True
+    bn = False
     dropout = True
     train(epoch_count, learning_rate, beta1,dropout, bn)

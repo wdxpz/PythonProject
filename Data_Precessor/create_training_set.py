@@ -7,13 +7,12 @@ import scipy.io as sio
 import numpy as np
 import pandas as pd
 
-from get_density_map import get_density_map
-#from Src.utils import show_density_map
+from Data_Precessor.get_density_map import get_density_map
 
 seed = 95461354
 random.seed(seed)
 N = 9
-dataset = 'A'
+dataset = 'B'
 dataset_name = 'part_' + dataset + '_patches_' + str(N)
 path = '../data/part_' + dataset + '_final/train_data/images/'
 gt_path = '../data/part_' + dataset + '_final/train_data/ground_truth/'

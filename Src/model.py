@@ -52,9 +52,9 @@ def model_loss(ground_true, density_map):
 
     # mse = tf.losses.mean_squared_error(resize_gt, density_map)
     # loss = tf.reduce_mean(mse)
-    # mae = tf.abs(dt_count-gt_count)
-    mse = tf.sqrt(tf.reduce_mean((resize_gt - density_map)*(resize_gt - density_map)))
-    return mse, gt_count, dt_count, re_count
+    mae = tf.abs(dt_count-gt_count)
+    # mse = tf.sqrt(tf.reduce_mean((resize_gt - density_map)*(resize_gt - density_map)))
+    return mae, gt_count, dt_count, re_count
 
 
 def model_crowd_count(ground_true, density_map):

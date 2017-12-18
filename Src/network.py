@@ -3,8 +3,9 @@ import tensorflow as tf
 
 def conv2d(inputs, out_channels, kernel_size, stride, bn, is_train, relu=True, dropout=False,
            max_pool=True, alpha=0.02, keep_prob=0.8, max_pool_size=2):
+    kernel_initializer = tf.contrib.layers.xavier_initializer()
     conv = tf.layers.conv2d(inputs, out_channels, kernel_size, stride, padding='same', activation=None,
-                            kernel_initializer=tf.contrib.layers.xavier_initializer())
+                            kernel_initializer= kernel_initializer)
     if bn:
         conv = tf.layers.batch_normalization(conv, training=is_train)
 
