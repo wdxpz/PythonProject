@@ -40,3 +40,4 @@ def predict_crowd_count(filepathname):
 
 if __name__ == '__main__':
     predict_crowd_count('test.jpg')
+    input('any input to quit')

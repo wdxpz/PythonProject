@@ -21,6 +21,9 @@ class ImageDataLoader:
             random.seed(2468)
         self.num_samples = len(self.data_files)
         self.blob_list = {}
+        #!!!!!!!!!!!!!!!!!!!!!!!!just for test!!!!!!!!!!!!!!!!!!!
+        #self.id_list = range(0, 3)
+        # !!!!!!!!!!!!!!!!!!!!!!!!just for test!!!!!!!!!!!!!!!!!!!
         self.id_list = range(0, self.num_samples)
         if self.pre_load:
             print('Pre_loading the data. This may take some time...')

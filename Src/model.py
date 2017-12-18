@@ -1,12 +1,13 @@
 from Src.network import conv2d
 import tensorflow as tf
+import math
 
 
 def model_input():
     inputs = tf.placeholder(tf.float32, shape=[1, None, None, 1], name='input_image')
     gt = tf.placeholder(tf.float32, shape=[1, None, None, 1], name='ground_true')
     learning_rate = tf.placeholder(tf.float32, name='learning_rate')
-    is_training = tf.placeholder(tf.bool, 'is_training')
+    is_training = tf.placeholder(tf.bool, name='is_training')
 
     return inputs, gt, learning_rate, is_training
 
@@ -49,8 +50,10 @@ def model_loss(ground_true, density_map):
     dt_count = tf.reduce_sum(density_map)
     re_count = tf.reduce_sum(resize_gt)
 
-    mse = tf.losses.mean_squared_error(resize_gt, density_map)
+    # mse = tf.losses.mean_squared_error(resize_gt, density_map)
     # loss = tf.reduce_mean(mse)
+    # mae = tf.abs(dt_count-gt_count)
+    mse = tf.sqrt(tf.reduce_mean((resize_gt - density_map)*(resize_gt - density_map)))
     return mse, gt_count, dt_count, re_count
 
 
