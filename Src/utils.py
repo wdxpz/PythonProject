@@ -31,6 +31,7 @@ def save_density_map(density_map, output_dir, fname='results.png'):
 def show_density_map(density_map):
     density_map_int = 255 * density_map / np.max(density_map)
     density_map_int.astype(np.int)
+    # density_map_int = density_map / np.max(density_map)
     skimage.io.imshow(density_map_int)
 
 

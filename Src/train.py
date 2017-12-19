@@ -61,8 +61,8 @@ def test(sess, dataloader, input_image, gt_density, loss, gt_count, crowd_count,
         mae += err
         if err > max_err: max_err = err
         if err < min_err: min_err = err
-        # print('testing file: {}, ground truth count: {}, estimated count: {}'.format(blob['fname'],
-        #                                                                              gt_count_val,crowd_count_val))
+        print('testing file: {}, ground truth count: {}, estimated count: {}'.format(blob['fname'],
+                                                                                     gt_count_val,crowd_count_val))
     return val_loss / steps, mae / steps, max_err, min_err
 
 
@@ -88,8 +88,8 @@ def predict(sess, filepathname, density, input_image, is_train):
 
 
 def train(epoch_count, learning_rate, beta1, dropout, bn):
-    print_every = 500
-    valid_every = 1000
+    print_every = 10
+    valid_every = 100
 
     input_image, gt_density, lr, is_train = model_input()
     density = model_MCNN(input_image, bn, dropout, is_train)
@@ -123,6 +123,9 @@ def train(epoch_count, learning_rate, beta1, dropout, bn):
                 train_loss += loss_val
                 mae += fabs(gt_count_val-crowd_count_val)
 
+                # print('training file: {}, \t gt_count: {}, resized_gt_count: {}, est_count:{}'.format(blob['fname'],
+                #                                                         gt_count_val, re_count_val, crowd_count_val))
+
                 if steps % print_every == 0:
                     log_text = 'epoch: %4d, step %4d, avaerage training loss: %f, average training mae: %4.1f,  ' % \
                                (epoch_i, steps, train_loss / steps,  mae / steps)
@@ -154,8 +157,8 @@ def train(epoch_count, learning_rate, beta1, dropout, bn):
 
 
 if __name__ == '__main__':
-    epoch_count = 100
-    learning_rate = 0.0001
+    epoch_count = 50
+    learning_rate = 0.0000001
     beta1 = 0.5
     bn = False
     dropout = True
