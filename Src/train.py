@@ -20,7 +20,7 @@ data_loader_val = ImageDataLoader(val_path, val_gt_path, shuffle=False, gt_downs
 data_loader_test = ImageDataLoader(test_path, test_gt_path, shuffle=False, gt_downsample=True, pre_load=False)
 
 
-def evaluate(sess, dataloader, input_image, gt_density, loss, gt_count, crowd_count, is_train):
+def evaluate(sess, dataloader, input_image, gt_density, loss, gt_count, crowd_count, is_train, validation_loss_sum, sum_writer, global_steps):
     val_loss = 0
     mae = 0
     steps = 0
@@ -30,9 +30,12 @@ def evaluate(sess, dataloader, input_image, gt_density, loss, gt_count, crowd_co
         steps += 1
         im_data = blob['data']
         gt_data = blob['gt_density']
-        loss_val, gt_count_val, crowd_count_val = sess.run([loss, gt_count, crowd_count],
+        loss_val, gt_count_val, crowd_count_val, validation_sum = sess.run([loss, gt_count, crowd_count, validation_loss_sum],
                                                            feed_dict={input_image: im_data, gt_density: gt_data,
                                                                       is_train: False})
+
+        sum_writer.add_summary(validation_sum, global_steps)
+
         val_loss += loss_val
         err = fabs(gt_count_val - crowd_count_val)
         mae += err
@@ -88,8 +91,8 @@ def predict(sess, filepathname, density, input_image, is_train):
 
 
 def train(epoch_count, learning_rate, beta1, dropout, bn):
-    print_every = 10
-    valid_every = 100
+    print_every = 100
+    valid_every = 350
 
     input_image, gt_density, lr, is_train = model_input()
     density = model_MCNN(input_image, bn, dropout, is_train)
@@ -99,29 +102,37 @@ def train(epoch_count, learning_rate, beta1, dropout, bn):
     # gt_count, crowd_count = model_crowd_count(gt_density, density)
 
     saver = tf.train.Saver()
+    training_loss_sum = tf.summary.scalar('training_loss', loss)
+    validation_loss_sum = tf.summary.scalar('validation_loss', loss)
 
     with tf.Session() as sess:
+        summary_writer = tf.summary.FileWriter(output_dir, sess.graph)
+
         sess.run(tf.global_variables_initializer())
+
+        global_steps = 0
 
         for epoch_i in range(1, epoch_count+1):
             steps = 0
             train_loss = 0
             mae = 0
             for blob in data_loader:
+                global_steps += 1
                 steps += 1
                 im_data = blob['data']
                 # imshow(np.squeeze(im_data))
                 gt_data = blob['gt_density']
                 # print(np.sum(gt_data))
 
-                _, loss_val, gt_count_val, crowd_count_val, re_count_val = \
-                    sess.run([opt, loss, gt_count, crowd_count, re_count],
+                _, loss_val, gt_count_val, crowd_count_val, re_count_val, training_sum= \
+                    sess.run([opt, loss, gt_count, crowd_count, re_count, training_loss_sum],
                                                                       feed_dict={input_image: im_data,
                                                                                  gt_density: gt_data,
                                                                                  lr: learning_rate,
                                                                                  is_train: True})
                 train_loss += loss_val
                 mae += fabs(gt_count_val-crowd_count_val)
+                summary_writer.add_summary(training_sum, global_steps)
 
                 # print('training file: {}, \t gt_count: {}, resized_gt_count: {}, est_count:{}'.format(blob['fname'],
                 #                                                         gt_count_val, re_count_val, crowd_count_val))
@@ -133,7 +144,8 @@ def train(epoch_count, learning_rate, beta1, dropout, bn):
 
                 if steps % valid_every == 0:
                     avg_val_loss, val_mae, max_err, min_err = evaluate(sess, data_loader_val, input_image, gt_density,
-                                                     loss, gt_count, crowd_count, is_train)
+                                                     loss, gt_count, crowd_count, is_train, validation_loss_sum,
+                                                                       summary_writer, global_steps)
 
                     log_text = 'epoch: %4d, step %4d, average training loss: %f, average training mae: %4.1f, ' \
                                'average validation loss: %f, average validation mae: %4.1f, max validation err: ' \
@@ -143,7 +155,7 @@ def train(epoch_count, learning_rate, beta1, dropout, bn):
 
                     saver.save(sess, output_dir)
 
-            if epoch_i % 5 == 0:
+            if epoch_i % 100 == 0:
                 # final evaluation on test set
                 avg_test_loss, test_mae, max_err, min_err = test(sess, data_loader_test, input_image, gt_density,
                                                                  loss, gt_count, crowd_count, is_train)
@@ -157,8 +169,8 @@ def train(epoch_count, learning_rate, beta1, dropout, bn):
 
 
 if __name__ == '__main__':
-    epoch_count = 50
-    learning_rate = 0.0000001
+    epoch_count = 300
+    learning_rate = 0.00001
     beta1 = 0.5
     bn = False
     dropout = True

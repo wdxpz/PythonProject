@@ -47,6 +47,8 @@ def get_density_map(im, points, model='kdtree'):
             im_density += scipy.ndimage.filters.gaussian_filter(pt2d, sigma, mode='constant')
 
     density_count = np.sum(im_density)
+    print(np.max(im_density))
+    print(np.min(im_density))
     print('density count in original ground true {}; in density map {}'.format(gt_count, density_count))
 
 
