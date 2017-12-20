@@ -105,8 +105,8 @@ def train(epoch_count, learning_rate, beta1, dropout, bn):
     training_loss_sum = tf.summary.scalar('training_loss', loss)
     validation_loss_sum = tf.summary.scalar('validation_loss', loss)
 
-    lr = learning_rate
-    lr_decayed = False
+    lr_value = learning_rate
+    lr_decayed_level = 0
     pre_loss = 0
 
     with tf.Session() as sess:
@@ -132,13 +132,15 @@ def train(epoch_count, learning_rate, beta1, dropout, bn):
                     sess.run([opt, loss, gt_count, crowd_count, re_count, training_loss_sum],
                                                                       feed_dict={input_image: im_data,
                                                                                  gt_density: gt_data,
-                                                                                 lr: learning_rate,
+                                                                                 lr: lr_value,
                                                                                  is_train: True})
-                if fabs(loss_val-pre_loss) < 0.01 and not lr_decayed:
-                    lr = lr * 0.1
-                    lr_decayed = True
-                else:
-                    pre_loss = loss_val
+                if lr_decayed_level == 0 and fabs(loss_val-pre_loss) < 0.01:
+                    lr_value = lr_value * 0.1
+                    lr_decayed_level = 1
+                elif lr_decayed_level == 1 and fabs(loss_val-pre_loss) < 0.001:
+                    lr_value = lr_value * 0.1
+                    lr_decayed_level = 2
+                pre_loss = loss_val
 
                 train_loss += loss_val
                 mae += fabs(gt_count_val-crowd_count_val)

@@ -26,48 +26,48 @@ class ImageDataLoader:
         #self.id_list = range(0, 3)
         # !!!!!!!!!!!!!!!!!!!!!!!!just for test!!!!!!!!!!!!!!!!!!!
         self.id_list = range(0, self.num_samples)
-        if self.pre_load:
-            print('Pre_loading the data. This may take some time...')
-            for idx, fname in enumerate(self.data_files):
-                # fn = os.path.join(self.data_path, fname)
-                # img = skimage.io.imread(self.data_path+'\\'+fname)
-                img = cv2.imread(self.data_path+'\\'+fname, 0)
-                cv2.imshow('image', img)
-                img = img.astype(np.float32, copy=False)
-                try:
-                    if img.shape[2] > 0:
-                        # img = skimage.color.rgb2gray(img)
-                        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                        cv2.imshow('image gray', img)
-                except IndexError:
-                    pass
-                wd, ht = img.shape
-                wd1, ht1 = (wd // 4) * 4, (ht // 4) * 4
-                # img = skimage.transform.resize(img, [wd1, ht1], mode='constant')
-                img = cv2.resize(img, (wd1, ht1))
-                cv2.imshow('image resized', img)
-                # print(np.max(img))
-                # print(np.min(img))
-                # skimage.io.imshow(img)
-                img = img.reshape(1, img.shape[0], img.shape[1], 1)
-                den = pd.read_csv(self.gt_path + '\\' + os.path.splitext(fname)[0] + '.csv', header=None, dtype=np.float32) \
-                    .as_matrix()
-                # print(np.sum(den))
-                #!!!!!!!!!!!!!!!!!!!!!!!!!
-                #这部分downsample的计算移入到神经网络图的loss计算中，需验证！
-                #!!!!!!!!!!!!!!!!!!!!!!!!!
-                # if self.gt_downsample:
-                #     wd1, ht1 = wd1/4, ht1/4
-                # den = skimage.transform.resize(den, [wd1, ht1], mode='constant') * ((wd * ht) / (wd1 * ht1))
-                den = cv2.resize(den, (wd1, ht1))
-                cv2.imshow('density map', den)
-                # print(np.sum(den))
-                den = den.reshape(1, den.shape[0], den.shape[1], 1)
-                blob = {'data': img, 'gt_density': den, 'fname': fname}
-                self.blob_list[idx] = blob
-                if (idx + 1) % 100 == 0:
-                    print('Loaded', idx + 1, '/', self.num_samples, 'files')
-            print('complete loading', idx + 1, 'files')
+        # if self.pre_load:
+        #     print('Pre_loading the data. This may take some time...')
+        #     for idx, fname in enumerate(self.data_files):
+        #         # fn = os.path.join(self.data_path, fname)
+        #         # img = skimage.io.imread(self.data_path+'\\'+fname)
+        #         img = cv2.imread(self.data_path+'\\'+fname, 0)
+        #         cv2.imshow('image', img)
+        #         img = img.astype(np.float32, copy=False)
+        #         try:
+        #             if img.shape[2] > 0:
+        #                 # img = skimage.color.rgb2gray(img)
+        #                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        #                 cv2.imshow('image gray', img)
+        #         except IndexError:
+        #             pass
+        #         wd, ht = img.shape
+        #         wd1, ht1 = (wd // 4) * 4, (ht // 4) * 4
+        #         # img = skimage.transform.resize(img, [wd1, ht1], mode='constant')
+        #         img = cv2.resize(img, (wd1, ht1))
+        #         cv2.imshow('image resized', img)
+        #         # print(np.max(img))
+        #         # print(np.min(img))
+        #         # skimage.io.imshow(img)
+        #         img = img.reshape(1, img.shape[0], img.shape[1], 1)
+        #         den = pd.read_csv(self.gt_path + '\\' + os.path.splitext(fname)[0] + '.csv', header=None, dtype=np.float32) \
+        #             .as_matrix()
+        #         # print(np.sum(den))
+        #         #!!!!!!!!!!!!!!!!!!!!!!!!!
+        #         #这部分downsample的计算移入到神经网络图的loss计算中，需验证！
+        #         #!!!!!!!!!!!!!!!!!!!!!!!!!
+        #         # if self.gt_downsample:
+        #         #     wd1, ht1 = wd1/4, ht1/4
+        #         # den = skimage.transform.resize(den, [wd1, ht1], mode='constant') * ((wd * ht) / (wd1 * ht1))
+        #         den = cv2.resize(den, (wd1, ht1))
+        #         cv2.imshow('density map', den)
+        #         # print(np.sum(den))
+        #         den = den.reshape(1, den.shape[0], den.shape[1], 1)
+        #         blob = {'data': img, 'gt_density': den, 'fname': fname}
+        #         self.blob_list[idx] = blob
+        #         if (idx + 1) % 100 == 0:
+        #             print('Loaded', idx + 1, '/', self.num_samples, 'files')
+        #     print('complete loading', idx + 1, 'files')
 
     def __iter__(self):
         if self.shuffle:
@@ -104,6 +104,7 @@ class ImageDataLoader:
                 img = cv2.resize(img, (ht1, wd1))
                 # cv2.imshow('image resized', img)
                 img = img.astype(np.float32, copy=False)
+                img = img / 255.0
                 img = img.reshape(1, img.shape[0], img.shape[1], 1)
                 try:
                     den = pd.read_csv(self.gt_path + '\\' + os.path.splitext(fname)[0] + '.csv', header=None,
