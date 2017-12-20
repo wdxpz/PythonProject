@@ -105,6 +105,10 @@ def train(epoch_count, learning_rate, beta1, dropout, bn):
     training_loss_sum = tf.summary.scalar('training_loss', loss)
     validation_loss_sum = tf.summary.scalar('validation_loss', loss)
 
+    lr = learning_rate
+    lr_decayed = False
+    pre_loss = 0
+
     with tf.Session() as sess:
         summary_writer = tf.summary.FileWriter(output_dir, sess.graph)
 
@@ -130,6 +134,12 @@ def train(epoch_count, learning_rate, beta1, dropout, bn):
                                                                                  gt_density: gt_data,
                                                                                  lr: learning_rate,
                                                                                  is_train: True})
+                if fabs(loss_val-pre_loss) < 0.01 and not lr_decayed:
+                    lr = lr * 0.1
+                    lr_decayed = True
+                else:
+                    pre_loss = loss_val
+
                 train_loss += loss_val
                 mae += fabs(gt_count_val-crowd_count_val)
                 summary_writer.add_summary(training_sum, global_steps)
