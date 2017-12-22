@@ -2,6 +2,7 @@ import numpy as np
 import skimage
 from skimage import io
 import os
+import cv2
 
 
 def save_results(input_img, gt_data, density_map, output_dir, fname='results.png'):
@@ -20,19 +21,16 @@ def save_results(input_img, gt_data, density_map, output_dir, fname='results.png
     skimage.io.imsave(os.path.join(output_dir, fname), result_img)
 
 
-def save_density_map(density_map, output_dir, fname='results.png'):
-    density_map = 255 * density_map / np.max(density_map)
-    density_map.astype(np.int)
-    # density_map = density_map[0][0]
-    # skimage.io.imsave(os.path.join(output_dir, fname), density_map)
-    skimage.io.imshow(density_map)
+def save_density_map(fname, den):
+    den_int = den * 255 / np.max(den)
+    den_int = den_int.astype(np.uint8, copy=False)
+    cv2.imwrite(fname, den_int)
 
 
-def show_density_map(density_map):
-    density_map_int = 255 * density_map / np.max(density_map)
-    density_map_int.astype(np.int)
-    # density_map_int = density_map / np.max(density_map)
-    skimage.io.imshow(density_map_int)
+def show_density_map(name, den):
+    den_int = den * 255 / np.max(den)
+    den_int = den_int.astype(np.uint8, copy=False)
+    cv2.imshow(name, den_int)
 
 
 def display_results(input_img, gt_data, density_map):
