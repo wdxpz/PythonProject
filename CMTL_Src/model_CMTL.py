@@ -1,4 +1,4 @@
-from CMTL_Src.network import conv2d, spatial_pyramid_pool, fc, conv2d_trans
+from CMTL_Src.network_CMTL import conv2d, spatial_pyramid_pool, fc, conv2d_trans
 import tensorflow as tf
 import math
 
@@ -7,11 +7,12 @@ def model_input(batch_size, num_classes):
     inputs = tf.placeholder(tf.float32, shape=[batch_size, None, None, 1], name='input_image')
     gt_density = tf.placeholder(tf.float32, shape=[batch_size, None, None, 1], name='gt_density')
     gt_label = tf.placeholder(tf.float32, shape=[batch_size, num_classes], name='gt_label')
+    ce_weights = tf.placeholder(tf.float32, shape=[batch_size], name='gt_label')
 
-    return inputs, gt_density, gt_label
+    return inputs, gt_density, gt_label, ce_weights
 
 
-def CMTL(inputs, bn, dropout, is_train, num_classes=10):
+def CMTL(inputs, dropout, num_classes=10):
 
     #base layer
     base_layer = conv2d(inputs, 16, 9, 1, relu=True, dropout=False, max_pool=False)
@@ -29,8 +30,8 @@ def CMTL(inputs, bn, dropout, is_train, num_classes=10):
     #high-level prior stage 2
     hl_prior_fc = fc(hl_prior_2, 512, relu=True, dropout=True)
     hl_prior_fc = fc(hl_prior_fc, 256, relu=True, dropout=True)
-    class_logits = fc(hl_prior_fc, num_classes, relu=False, dropout=False)
-    class_logits = tf.nn.softmax(class_logits)
+    hl_prior_fc = fc(hl_prior_fc, num_classes, relu=False, dropout=False)
+    class_logits = tf.nn.softmax(hl_prior_fc)
 
 
     #density estimation stage

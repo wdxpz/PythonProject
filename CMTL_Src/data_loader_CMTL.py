@@ -32,6 +32,7 @@ class ImageDataLoader:
         self.count_class_hist = np.zeros(self.num_classes)
 
         self.get_stats_in_dataset() #get min - max crowd count present in the dataset. used later for assigning crowd group/class
+        self.class_weights = self.get_classifier_weights()
 
     def read_image_and_gt(self, fname):
         img = cv2.imread(self.data_path + '\\' + fname, 0)
@@ -62,9 +63,8 @@ class ImageDataLoader:
             print('error in loading density map of file: {}'.format(fname))
             return
         # print(np.sum(den))
-        # for mcnn scale the input image to 1/4, the coresponding density map needs to scale to same size
-        wd2, ht2 = wd1 // 4, ht1 // 4
-        den = cv2.resize(den, (ht2, wd2), interpolation=cv2.INTER_CUBIC) * 4 * 16
+        wd2, ht2 = wd1, ht1
+        den = cv2.resize(den, (ht2, wd2), interpolation=cv2.INTER_CUBIC) * 4
         if DEBUG_SHOW: show_density_map('density map resized', den)
         print(np.sum(den))
         den = den.reshape(1, den.shape[0], den.shape[1], 1)
@@ -106,7 +106,8 @@ class ImageDataLoader:
         num_batches = int(len(files)/self.batch_size)
 
         for i_batch in range(num_batches):
-            blob = {'datas': [], 'gt_densitys': [], 'gt_class_labels': [], 'fnames': [], 'gt_counts': []}
+            blob = {'datas': [], 'gt_densitys': [], 'gt_class_labels': [], 'fnames': [], 'gt_counts': [],
+                    'class_weights': []}
             for idx in range(i_batch*self.batch_siz, (i_batch+1)*self.batch_siz):
                 fname = files[idx]
                 img, den, gt_count = self.read_image_and_gt(fname)
@@ -122,11 +123,13 @@ class ImageDataLoader:
                 blob['gt_class_labels'].append(gt_class_label.reshape(1, gt_class_label.shape[0]))
                 blob['fnames'].append(fname)
                 blob['gt_counts'].append(gt_count)
+                blob['class_weights'].append((self.class_weights[class_idx]))
                 # cv2.destroyAllWindows()
 
             blob['datas'] = np.concatenate(blob['datas'], 0)
             blob['gt_densitys'] = np.concatenate(blob['gt_densitys'], 0)
             blob['gt_class_labels'] = np.concatenate(blob['gt_class_labels'], 0)
+            blob['class_weights'] = np.concatenate(blob['class_weights'], 0)
             yield blob
 
     def get_num_samples(self):
