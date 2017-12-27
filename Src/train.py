@@ -91,7 +91,7 @@ def train(epoch_count, beta1, dropout):
     global_step = tf.Variable(0, dtype=tf.float32)
     learningrate = tf.train.exponential_decay(learning_rate=0.0000001,global_step= global_step,
                                               decay_steps=500,
-                                              decay_rate=0.1,
+                                              decay_rate=0.8,
                                               staircase=True)
     opt = tf.train.MomentumOptimizer(learningrate, momentum=0.9).minimize(loss, global_step=global_step)
     # opt = tf.train.AdamOptimizer(learning_rate=learningrate, beta1=0.5).minimize(loss, global_step=global_step)
@@ -138,7 +138,7 @@ def train(epoch_count, beta1, dropout):
         saver.save(sess, output_dir)
 
 if __name__ == '__main__':
-    epoch_count = 300
+    epoch_count = 1000
     learning_rate = 0.00001
     beta1 = 0.5
     bn = False
