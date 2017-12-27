@@ -7,8 +7,8 @@ def conv2d(inputs, out_channels, kernel_size, stride, relu=True, dropout=False,
     conv = tf.layers.conv2d(inputs, out_channels, kernel_size, stride, padding='same', activation=None,
                             kernel_initializer= kernel_initializer)
     if relu:
-        # conv = tf.nn.relu(conv)
-        conv = tf.maximum(alpha * conv, conv)
+        conv = tf.nn.relu(conv)
+        # conv = tf.maximum(alpha * conv, conv)
 
     if dropout:
         conv = tf.nn.dropout(conv, keep_prob=keep_prob)

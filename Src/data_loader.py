@@ -67,7 +67,7 @@ class ImageDataLoader:
                 # print(np.sum(den))
                 # for mcnn scale the input image to 1/4, the coresponding density map needs to scale to same size
                 wd2, ht2 = wd1 // 4, ht1 // 4
-                den = cv2.resize(den, (ht2, wd2), interpolation=cv2.INTER_CUBIC) * 4 * 16
+                den = cv2.resize(den, (ht2, wd2), interpolation=cv2.INTER_CUBIC) * 64
                 # print(np.sum(den))
                 den = den.reshape(1, den.shape[0], den.shape[1], 1)
                 blob['data'].append(img)
