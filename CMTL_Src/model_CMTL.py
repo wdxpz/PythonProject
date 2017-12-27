@@ -1,11 +1,14 @@
-from CMTL_Src.network_CMTL import conv2d, spatial_pyramid_pool, fc, conv2d_trans
+from CMTL_Src.network_CMTL import *
 import tensorflow as tf
 import math
 
 
 def model_input(batch_size, num_classes):
-    inputs = tf.placeholder(tf.float32, shape=[batch_size, None, None, 1], name='input_image')
-    gt_density = tf.placeholder(tf.float32, shape=[batch_size, None, None, 1], name='gt_density')
+    # inputs = tf.placeholder(tf.float32, shape=[batch_size, None, None, 1], name='input_image')
+    # gt_density = tf.placeholder(tf.float32, shape=[batch_size, None, None, 1], name='gt_density')
+    ####only for dataset B
+    inputs = tf.placeholder(tf.float32, shape=[batch_size, 384, 512, 1], name='input_image')
+    gt_density = tf.placeholder(tf.float32, shape=[batch_size, 384, 512, 1], name='gt_density')
     gt_label = tf.placeholder(tf.float32, shape=[batch_size, num_classes], name='gt_label')
     ce_weights = tf.placeholder(tf.float32, shape=[batch_size], name='gt_label')
 
@@ -15,39 +18,45 @@ def model_input(batch_size, num_classes):
 def CMTL(inputs, dropout, num_classes=10):
 
     #base layer
-    base_layer = conv2d(inputs, 16, 9, 1, relu=True, dropout=False, max_pool=False)
-    base_layer = conv2d(base_layer, 32, 7, 1, relu=True, dropout=False, max_pool=False)
+    base_layer = conv2d(inputs, 16, 9, 1, relu='prelu', dropout=False, max_pool=False)
+    base_layer = conv2d(base_layer, 32, 7, 1, relu='prelu', dropout=False, max_pool=False)
 
     #high-level prior stage1
-    hl_prior_1 = conv2d(base_layer, 16, 9, 1, relu=True, dropout=False, max_pool=True)
-    hl_prior_1 = conv2d(hl_prior_1, 32, 7, 1, relu=True, dropout=False, max_pool=True)
-    hl_prior_1 = conv2d(hl_prior_1, 16, 7, 1, relu=True, dropout=False, max_pool=False)
-    hl_prior_1 = conv2d(hl_prior_1, 8, 7, 1, relu=True, dropout=False, max_pool=False)
+    hl_prior_1 = conv2d(base_layer, 16, 9, 1, relu='prelu', dropout=False, max_pool=True)
+    hl_prior_1 = conv2d(hl_prior_1, 32, 7, 1, relu='prelu', dropout=False, max_pool=True)
+    hl_prior_1 = conv2d(hl_prior_1, 16, 7, 1, relu='prelu', dropout=False, max_pool=False)
+    hl_prior_1 = conv2d(hl_prior_1, 8, 7, 1, relu='prelu', dropout=False, max_pool=False)
 
     # high-level prior pyramid max pooling
-    hl_prior_2 = spatial_pyramid_pool(hl_prior_1)
+    # hl_prior_2 = spatial_pyramid_pool(hl_prior_1, dimensions=[16, 16])
+    hl_prior_2 = spp_layer2(hl_prior_1, [32])
+    # print('tenser after pyramid_pooling: {}'.format(hl_prior_2))
+    # to check if the ourput is 4*1024
 
     #high-level prior stage 2
-    hl_prior_fc = fc(hl_prior_2, 512, relu=True, dropout=True)
-    hl_prior_fc = fc(hl_prior_fc, 256, relu=True, dropout=True)
-    hl_prior_fc = fc(hl_prior_fc, num_classes, relu=False, dropout=False)
-    class_logits = tf.nn.softmax(hl_prior_fc)
+    hl_prior_fc = fc(hl_prior_2, 512, relu='prelu', dropout=True)
+    hl_prior_fc = fc(hl_prior_fc, 256, relu='prelu', dropout=True)
+    class_logits = fc(hl_prior_fc, num_classes, relu='none', dropout=False)
+    #???????for the classification logits, is it need to user activation?????
+    # class_logits = tf.nn.softmax(class_logits)
 
 
     #density estimation stage
-    den_stage_1 = conv2d(base_layer, 20, 7, 1, relu=True, dropout=False, max_pool=True)
-    den_stage_1 = conv2d(den_stage_1, 40, 5, 1, relu=True, dropout=False, max_pool=True)
-    den_stage_1 = conv2d(den_stage_1, 20, 5, 1, relu=True, dropout=False, max_pool=False)
-    den_stage_1 = conv2d(den_stage_1, 10, 5, 1, relu=True, dropout=False, max_pool=False)
+    den_stage_1 = conv2d(base_layer, 20, 7, 1, relu='prelu', dropout=False, max_pool=True)
+    den_stage_1 = conv2d(den_stage_1, 40, 5, 1, relu='prelu', dropout=False, max_pool=True)
+    den_stage_1 = conv2d(den_stage_1, 20, 5, 1, relu='prelu', dropout=False, max_pool=False)
+    den_stage_1 = conv2d(den_stage_1, 10, 5, 1, relu='prelu', dropout=False, max_pool=False)
 
     fuse = tf.concat([hl_prior_1, den_stage_1], 3)
 
-    den_stage_2 = conv2d(fuse, 24, 3, 1, relu=True, dropout=False, max_pool=False)
-    den_stage_2 = conv2d(den_stage_2, 32, 3, 1, relu=True, dropout=False, max_pool=False)
-    den_stage_2 = conv2d_trans(den_stage_2, 16, 4, 2, relu=True, dropout=False)
-    den_stage_2 = conv2d_trans(den_stage_2, 8, 4, 2, relu=True, dropout=False)
+    den_stage_2 = conv2d(fuse, 24, 3, 1, relu='prelu', dropout=False, max_pool=False)
+    den_stage_2 = conv2d(den_stage_2, 32, 3, 1, relu='prelu', dropout=False, max_pool=False)
+    den_stage_2 = conv2d_trans(den_stage_2, 16, 4, 2, relu='prelu', dropout=False)
+    den_stage_2 = conv2d_trans(den_stage_2, 8, 4, 2, relu='prelu', dropout=False)
 
-    den = conv2d(den_stage_2, 1, 1, relu=False, dropout=False, max_pool=False)
+    den = conv2d(den_stage_2, 1, 1, 1, relu='none', dropout=False, max_pool=False)
+    #where the original paper used relu, not None nor prelu
+    #????????for the output of density map, it is need to user activation????????/
 
     return class_logits, den
 

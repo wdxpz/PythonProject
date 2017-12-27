@@ -14,9 +14,9 @@ val_gt_path = '../data/formatted_trainval/part_' + dataset + '_patches_9/val_den
 test_path = '../data/part_' + dataset + '_final/test_data/images'
 test_gt_path = '../data/part_' + dataset + '_final/test_data/ground_truth_csv'
 
-BATCH_SIZE = 20
+BATCH_SIZE = 3
 
-data_loader = ImageDataLoader(train_path, train_gt_path, shuffle=True, batch_size=BATCH_SIZE)
+data_loader = ImageDataLoader(train_path, train_gt_path, shuffle=False, batch_size=BATCH_SIZE)
 data_loader_val = ImageDataLoader(val_path, val_gt_path, shuffle=False, batch_size=BATCH_SIZE)
 data_loader_test = ImageDataLoader(test_path, test_gt_path, shuffle=False, batch_size=BATCH_SIZE)
 
@@ -27,15 +27,16 @@ def evaluate(sess, dataloader, input_image, gt_density, density):
     loss = 0
     num_samples = 0
     for blob in dataloader:
-        num_samples += len(blob['fname'])
-        im_data = blob['data']
-        gt_data = blob['gt_density']
+        num_samples += len(blob['fnames'])
+        im_data = blob['datas']
+        gt_data = blob['gt_densitys']
 
-        density_map = sess.run(density, feed_dict={input_image: im_data, gt_density: gt_data})
+        # density_map = sess.run(density, feed_dict={input_image: im_data, gt_density: gt_data})
+        density_map = sess.run(density, feed_dict={input_image: im_data})
 
-        mae += np.sum(np.abs(np.sum(blob['gt_density'], (1, 2)) - np.sum(density_map, (1, 2))))
-        mse += np.sum(np.square(np.sum(blob['gt_density'], (1,2))- np.sum(density_map, (1,2))))
-        loss += np.sum(np.sqrt(np.sum(np.square(blob['gt_density']-density_map), (1, 2))))
+        mae += np.sum(np.abs(np.sum(blob['gt_densitys'], (1, 2)) - np.sum(density_map, (1, 2))))
+        mse += np.sum(np.square(np.sum(blob['gt_densitys'], (1,2))- np.sum(density_map, (1,2))))
+        loss += np.sum(np.sqrt(np.sum(np.square(blob['gt_densitys']-density_map), (1, 2))))
 
     mae = mae / num_samples
     mse = math.sqrt(mse / num_samples)
@@ -83,7 +84,7 @@ def predict(sess, filepathname, density, input_image):
 
 
 def train(epoch_count, dropout, num_classes, batch_size):
-
+    print('network building...')
     input_image, gt_density, gt_label, ce_weights = model_input(batch_size, num_classes)
     class_logits, density = CMTL(input_image, dropout, num_classes)
     density = tf.identity(density, name='density_map')
@@ -91,14 +92,14 @@ def train(epoch_count, dropout, num_classes, batch_size):
                                                          ce_weight=ce_weights) # or ce_weights=1.0
 
     global_step = tf.Variable(0, dtype=tf.float32)
-    learningrate = tf.train.exponential_decay(learning_rate=0.00001,global_step= global_step,
-                                              decay_steps=1000,
-                                              decay_rate=0.5,
+    learningrate = tf.train.exponential_decay(learning_rate=0.0000001,global_step= global_step,
+                                              decay_steps=500,
+                                              decay_rate=0.8,
                                               staircase=True)
     opt = tf.train.MomentumOptimizer(learningrate, momentum=0.9).minimize(loss, global_step=global_step)
 
     saver = tf.train.Saver()
-
+    print('network built')
     # training_loss_sum = tf.summary.scalar('training_loss', loss)
     # validation_loss_sum = tf.summary.scalar('validation_loss', loss)
 
@@ -106,14 +107,14 @@ def train(epoch_count, dropout, num_classes, batch_size):
         summary_writer = tf.summary.FileWriter(output_dir, sess.graph)
 
         sess.run(tf.global_variables_initializer())
-
+        print('graph initing')
         for epoch_i in range(1, epoch_count+1):
             # use total batches to train opt at first, then evaluate
             batch_steps = 0
             for blob in data_loader:
                 batch_steps += 1
-                im_data = blob['data']
-                gt_den_data = blob['gt_density']
+                im_data = blob['datas']
+                gt_den_data = blob['gt_densitys']
                 gt_label_data = blob['gt_class_labels']
                 ce_weights_data = blob['class_weights']
 
@@ -150,4 +151,4 @@ if __name__ == '__main__':
     beta1 = 0.5
     bn = False
     dropout = True
-    train(epoch_count,dropout, 10, 2)
+    train(epoch_count,dropout, 10, BATCH_SIZE)
