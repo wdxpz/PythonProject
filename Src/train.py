@@ -1,7 +1,7 @@
 import cv2
 import math
 import numpy as np
-
+import os.path
 from Src.data_loader import ImageDataLoader
 from Src.model import *
 
@@ -89,13 +89,14 @@ def train(epoch_count, beta1, dropout):
     loss, mae, mse, = model_loss(gt_density, density)
 
     global_step = tf.Variable(0, dtype=tf.float32)
-    learningrate = tf.train.exponential_decay(learning_rate=0.00001,global_step= global_step,
-                                              decay_steps=1000,
-                                              decay_rate=0.5,
+    learningrate = tf.train.exponential_decay(learning_rate=0.000001,global_step= global_step,
+                                              decay_steps=500,
+                                              decay_rate=0.8,
                                               staircase=True)
-    opt = tf.train.MomentumOptimizer(learningrate, momentum=0.9).minimize(loss, global_step=global_step)
-
+    # opt = tf.train.MomentumOptimizer(learningrate, momentum=0.9).minimize(loss, global_step=global_step)
+    opt = tf.train.AdamOptimizer(learning_rate=learningrate, beta1=0.9).minimize(loss, global_step=global_step)
     saver = tf.train.Saver()
+    tf.add_to_collection('train_opt', opt)
 
     # training_loss_sum = tf.summary.scalar('training_loss', loss)
     # validation_loss_sum = tf.summary.scalar('validation_loss', loss)
@@ -113,7 +114,7 @@ def train(epoch_count, beta1, dropout):
                 im_data = blob['data']
                 gt_data = blob['gt_density']
 
-                _, density_map, t_loss, t_mae, t_mse, num_global_step = sess.run([opt, density, loss, mae, mse, global_step],
+                _, density_map, t_loss, t_mae, t_mse, num_global_step, t_learningrate = sess.run([opt, density, loss, mae, mse, global_step, learningrate],
                                                    feed_dict={input_image: im_data, gt_density: gt_data})
                 # loss = np.mean(np.sqrt(np.sum(np.square(blob['gt_density'] - density_map), (1, 2))))
                 # np_mae = np.mean(np.abs(np.sum(blob['gt_density'], (1,2))- np.sum(density_map, (1,2))))
@@ -123,9 +124,11 @@ def train(epoch_count, beta1, dropout):
                 #     print('file: {}, orginal count: {}, estimate count:{}'.format(blob['fname'][i],
                 #                                                                   np.sum(blob['gt_density'][i]),
                 #                                                                   np.sum(density_map[i])))
-                print('Train -- epoch: {}, \tbatch: {}, \tglobal_step: {}\tloss: {}, \tmse: {}, \tmae: {}'.
-                      format(epoch_i, batch_steps, num_global_step, t_loss, t_mse, t_mae))
+                print('Train -- epoch: {}, \tbatch: {}, \tglobal_step: {}\tlearningrate: {}\tloss: {}, \tmse: {}, \tmae: {}'.
+                      format(epoch_i, batch_steps, num_global_step, t_learningrate, t_loss, t_mse, t_mae))
                 # break
+
+                saver.save(sess, output_dir)
 
             v_loss, v_mse, v_mae = evaluate(sess,data_loader_val, input_image, gt_density, density, mae, mse)
             print('-'*100)
@@ -135,12 +138,66 @@ def train(epoch_count, beta1, dropout):
             # break
         predict(sess, 'test.jpg', density, input_image)
 
-        saver.save(sess, output_dir)
+
+def re_train(epoch_count, beta1, dropout):
+    if not os.path.exists(output_dir + '.meta'):
+        return
+
+    loaded_graph = tf.Graph()
+    with tf.Session(graph=loaded_graph) as sess:
+        # Load model
+        loader = tf.train.import_meta_graph(output_dir + '.meta')
+        loader.restore(sess, output_dir)
+
+        # Get Tensors from loaded model
+        input_image = loaded_graph.get_tensor_by_name('input_image:0')
+        gt_density = loaded_graph.get_tensor_by_name('ground_true:0')
+        density = loaded_graph.get_tensor_by_name('density_map:0')
+        loss = loaded_graph.get_tensor_by_name('Mean_2:0')
+        mae = loaded_graph.get_tensor_by_name('Mean:0')
+        mse = loaded_graph.get_tensor_by_name('Sqrt:0')
+        learningrate = loaded_graph.get_tensor_by_name('ExponentialDecay:0')
+        opt = tf.get_collection('train_opt')[0]
+
+        saver = tf.train.Saver()
+        summary_writer = tf.summary.FileWriter(output_dir, sess.graph)
+
+        # sess.run(tf.global_variables_initializer())
+        global_step = tf.Variable(0, dtype=tf.float32)
+        sess.run(tf.variables_initializer([global_step]))
+        learningrate = tf.train.exponential_decay(learning_rate=0.0000001, global_step=global_step,
+                                                  decay_steps=1000,
+                                                  decay_rate=0.8,
+                                                  staircase=True)
+
+        for epoch_i in range(1, epoch_count + 1):
+            # use total batches to train opt at first, then evaluate
+            batch_steps = 0
+            for blob in data_loader:
+                batch_steps += 1
+                im_data = blob['data']
+                gt_data = blob['gt_density']
+
+                _, density_map, t_loss, t_mae, t_mse, num_global_step, t_learningrate = sess.run(
+                    [opt, density, loss, mae, mse, global_step, learningrate],
+                    feed_dict={input_image: im_data, gt_density: gt_data})
+                print('Train -- epoch: {}, \tbatch: {}, \tglobal_step: {}\tlearningrate: {}\tloss: {}, \tmse: {}, \tmae: {}'.
+                    format(epoch_i, batch_steps, num_global_step, t_learningrate, t_loss, t_mse, t_mae))
+
+            v_loss, v_mse, v_mae = evaluate(sess, data_loader_val, input_image, gt_density, density, mae, mse)
+            saver.save(sess, output_dir)
+            print('-' * 100)
+            print('Validation -- epoch: {}, \tloss: {}, \tmse: {}, \tmae: {}'.format(epoch_i, v_loss, v_mse, v_mae))
+            print('-' * 100)
+
+            # break
+        predict(sess, 'test.jpg', density, input_image)
 
 if __name__ == '__main__':
-    epoch_count = 500
+    epoch_count = 1000
     learning_rate = 0.00001
     beta1 = 0.5
     bn = False
-    dropout = True
+    dropout = False
     train(epoch_count, beta1,dropout)
+    # re_train(epoch_count, beta1, dropout)
