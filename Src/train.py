@@ -89,12 +89,12 @@ def train(epoch_count, beta1, dropout):
     loss, mae, mse, = model_loss(gt_density, density)
 
     global_step = tf.Variable(0, dtype=tf.float32)
-    learningrate = tf.train.exponential_decay(learning_rate=0.0000001,global_step= global_step,
+    learningrate = tf.train.exponential_decay(learning_rate=0.000001,global_step= global_step,
                                               decay_steps=500,
                                               decay_rate=0.8,
                                               staircase=True)
-    opt = tf.train.MomentumOptimizer(learningrate, momentum=0.9).minimize(loss, global_step=global_step)
-    # opt = tf.train.AdamOptimizer(learning_rate=learningrate, beta1=0.5).minimize(loss, global_step=global_step)
+    # opt = tf.train.MomentumOptimizer(learningrate, momentum=0.9).minimize(loss, global_step=global_step)
+    opt = tf.train.AdamOptimizer(learning_rate=learningrate, beta1=0.9).minimize(loss, global_step=global_step)
     saver = tf.train.Saver()
 
     # training_loss_sum = tf.summary.scalar('training_loss', loss)
@@ -127,6 +127,8 @@ def train(epoch_count, beta1, dropout):
                       format(epoch_i, batch_steps, num_global_step, t_loss, t_mse, t_mae))
                 # break
 
+                saver.save(sess, output_dir)
+
             v_loss, v_mse, v_mae = evaluate(sess,data_loader_val, input_image, gt_density, density, mae, mse)
             print('-'*100)
             print('Validation -- epoch: {}, \tloss: {}, \tmse: {}, \tmae: {}'.format(epoch_i, v_loss, v_mse, v_mae))
@@ -135,7 +137,7 @@ def train(epoch_count, beta1, dropout):
             # break
         predict(sess, 'test.jpg', density, input_image)
 
-        saver.save(sess, output_dir)
+
 
 if __name__ == '__main__':
     epoch_count = 1000
