@@ -1,0 +1,11 @@
+baseline 2017-12-28 851
+Validation -- epoch 571, 	loss 5.785783386230468, 	mse 67.77438156763218, 	mae 46.52538299560547
+
+with:
+
+learningrate = tf.train.exponential_decay(learning_rate=0.000001,global_step= global_step,
+                                              decay_steps=500,
+                                              decay_rate=0.8,
+                                              staircase=True)
+    # opt = tf.train.MomentumOptimizer(learningrate, momentum=0.9).minimize(loss, global_step=global_step)
+    opt = tf.train.AdamOptimizer(learning_rate=learningrate, beta1=0.9).minimize(loss, global_step=global_step)
